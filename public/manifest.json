@@ -26,7 +26,8 @@
       "purpose": "maskable"
     }
   ],
-  "start_url": "http://localhost:8100/memories",
+  "start_url": "/?standalone=true",
   "display": "standalone",
-  "background_color": "#000000"
+  "background_color": "#000000",
+  "lang": "en"
 }
