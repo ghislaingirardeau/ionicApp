@@ -1,0 +1,15 @@
+{
+  "appId": "com.webdev.appgg",
+  "appName": "gg web dev app",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "hostname": "localhost",
+    "cleartext": true
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
+}
