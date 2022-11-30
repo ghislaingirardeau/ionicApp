@@ -2,6 +2,8 @@ capacitor config = changer le webdir pour DIST au lieu de public, car ionic buil
 
 Dans public index.html, supprimer le BASE_URL de <link rel="shortcut icon" type="image/png" href="assets/icon/favicon.png" />
 
+start dev : ionic serve
+
 run : ionic build
 to copy update : npx cap copy
 npx cap open android : to open inside android
