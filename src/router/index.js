@@ -18,6 +18,10 @@ const routes = [
     path: "/memories/add",
     component: () => import("../pages/addMemoryPage.vue"),
   },
+  {
+    path: "/memories/transcribe",
+    component: () => import("../pages/homePage.vue"),
+  },
 ];
 
 const router = createRouter({
