@@ -144,24 +144,22 @@ export default {
         window.SpeechRecognition || window.webkitSpeechRecognition;
       this.recognition = new SpeechRecognition();
       this.recognition.lang = this.langSelected; // setup language
-      this.recognition.interimResults = true; // if you want to show the results in process
+      this.recognition.interimResults = false; // if you want to show the results in process
       this.recognition.maxAlternatives = 1; // get mutliple result
-      this.recognition.continuous = true;
+      this.recognition.continuous = false;
 
       const startTrancribing = () => {
         this.recognition.start();
         fromFile ? this.audio.play() : "";
         this.recognition.onresult = (event) => {
-          this.onlive = event.results[event.results.length - 1][0].transcript;
+          /* this.onlive = event.results[event.results.length - 1][0].transcript; */
           /* event.results[event.results.length - 1].isFinal
           ? this.textRecord.push(
               ` ${event.results[event.results.length - 1][0].transcript}.`
             )
           : ""; */
-          if (event.results[event.results.length - 1].isFinal) {
-            this.textRecord.push(
-              ` ${event.results[event.results.length - 1][0].transcript}.`
-            );
+          if (event.results[0].isFinal) {
+            this.textRecord.push(` ${event.results[0][0].transcript}.`);
             if (fromFile) {
               this.recognition.stop();
               this.audio.pause();
