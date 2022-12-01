@@ -2,6 +2,7 @@
   <base-layout pageTitle="Speech to text" page-default-back-link="/memories">
     <div>
       <ion-checkbox v-model="transcribeFromFile"></ion-checkbox>
+      <ion-icon :icon="micOutline"> </ion-icon>
       <div v-if="transcribeFromFile">
         <h2>Pick a file and transcribe from it</h2>
         <div v-if="fileAudioLoad">
@@ -73,16 +74,20 @@
 <script>
 import { Document, Packer, Paragraph } from "docx";
 
-import { IonButton, IonInput, IonCheckbox } from "@ionic/vue";
+import { IonButton, IonInput, IonCheckbox, IonIcon } from "@ionic/vue";
+
+import { micOutline } from "ionicons/icons";
 
 export default {
   components: {
     IonButton,
     IonInput,
     IonCheckbox,
+    IonIcon,
   },
   data() {
     return {
+      micOutline,
       transcribeFromFile: false,
       textRecord: [],
       recognition: null,
@@ -144,7 +149,7 @@ export default {
         window.SpeechRecognition || window.webkitSpeechRecognition;
       this.recognition = new SpeechRecognition();
       this.recognition.lang = this.langSelected; // setup language
-      this.recognition.interimResults = false; // if you want to show the results in process
+      this.recognition.interimResults = true; // if you want to show the results in process
       this.recognition.maxAlternatives = 1; // get mutliple result
       this.recognition.continuous = false;
 
@@ -152,14 +157,16 @@ export default {
         this.recognition.start();
         fromFile ? this.audio.play() : "";
         this.recognition.onresult = (event) => {
-          /* this.onlive = event.results[event.results.length - 1][0].transcript; */
+          this.onlive = event.results[event.results.length - 1][0].transcript;
           /* event.results[event.results.length - 1].isFinal
           ? this.textRecord.push(
               ` ${event.results[event.results.length - 1][0].transcript}.`
             )
           : ""; */
-          if (event.results[0].isFinal) {
-            this.textRecord.push(` ${event.results[0][0].transcript}.`);
+          if (event.results[event.results.length - 1].isFinal) {
+            this.textRecord.push(
+              ` ${event.results[event.results.length - 1][0].transcript}.`
+            );
             if (fromFile) {
               this.recognition.stop();
               this.audio.pause();
