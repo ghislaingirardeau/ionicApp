@@ -1,8 +1,84 @@
 <template>
   <base-layout pageTitle="Speech to text" page-default-back-link="/memories">
+    <ion-grid>
+      <ion-row>
+        <ion-col
+          class="ion-text-center"
+          v-for="lang in languages"
+          :key="lang.country"
+          ><ion-button
+            small
+            @click="langSelected = lang.code"
+            :color="langSelected === lang.code ? 'primary' : 'secondary'"
+            >{{ lang.country }}</ion-button
+          ></ion-col
+        >
+      </ion-row>
+    </ion-grid>
+    <ion-grid>
+      <ion-row>
+        <ion-col class="ion-text-center">
+          <h1>Voice to text</h1>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col class="ion-text-center">
+          <!-- <ion-button @click="startRecord(transcribeFromFile)"
+            ><ion-icon :icon="micOutline"> </ion-icon>
+          </ion-button> -->
+          <div
+            class="ion-activatable ripple-parent circle"
+            @touchstart="startTouchRecord"
+            @touchend="stopTouchRecord"
+          >
+            <ion-icon :icon="micOutline" class="mic_icon--size"> </ion-icon>
+            <ion-ripple-effect
+              type="unbounded"
+              class="custom-ripple"
+            ></ion-ripple-effect>
+          </div>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col class="ion-text-center">
+          <p>Live text : {{ onlive }}</p>
+        </ion-col>
+      </ion-row>
+      <!-- <ion-row>
+        <ion-col class="ion-text-center">
+          <p>
+            <span v-for="(text, i) in textRecord" :key="i">
+              {{ text }}
+            </span>
+          </p>
+        </ion-col>
+      </ion-row> -->
+      <ion-row
+        v-for="(text, i) in textRecord"
+        :key="i"
+        class="ion-align-items-center"
+      >
+        <ion-col size="12" class="ion-text-center">
+          <ion-textarea
+            :label="'my record ' + i"
+            :value="text"
+            @keyup="doThis($event, i)"
+            rows="1"
+            auto-grow
+            class="custom-textarea"
+          ></ion-textarea>
+          <ion-icon
+            :icon="closeCircleOutline"
+            @click="clear(i)"
+            class="delete_icon"
+          >
+          </ion-icon>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
     <div>
       <ion-checkbox v-model="transcribeFromFile"></ion-checkbox>
-      <ion-icon :icon="micOutline"> </ion-icon>
+      <ion-icon v-if="isRecording" :icon="micCircleOutline"> </ion-icon>
       <div v-if="transcribeFromFile">
         <h2>Pick a file and transcribe from it</h2>
         <div v-if="fileAudioLoad">
@@ -24,21 +100,10 @@
           ></ion-input>
         </div>
       </div>
-      <ion-button @click="startRecord(transcribeFromFile)"
-        >Start transcribe</ion-button
-      >
-      <ion-button @click="stopRecord">Stop transcribe</ion-button>
+
       <ion-button @click="ponctuation">Add ponctuation</ion-button>
-      <ion-button @click="saveLocaly">localStorage</ion-button>
       <ion-button @click="exportDoc">export</ion-button>
-      <ion-button
-        v-for="lang in languages"
-        :key="lang.country"
-        small
-        @click="langSelected = lang.code"
-        :color="langSelected === lang.code ? 'primary' : 'secondary'"
-        >{{ lang.country }}</ion-button
-      >
+      <ion-button @click="stopRecord">Stop transcribe</ion-button>
     </div>
 
     <h2>My text recorded</h2>
@@ -64,6 +129,9 @@
         </span>
       </p>
     </div>
+    <ion-button @click="saveLocaly">save</ion-button>
+    <ion-button @click="cleanLocal">clean</ion-button>
+
     <div v-if="fromLocalStorage">
       <h2>from local storage</h2>
       <p>{{ fromLocalStorage }}</p>
@@ -74,9 +142,23 @@
 <script>
 import { Document, Packer, Paragraph } from "docx";
 
-import { IonButton, IonInput, IonCheckbox, IonIcon } from "@ionic/vue";
+import {
+  IonButton,
+  IonInput,
+  IonCheckbox,
+  IonIcon,
+  IonCol,
+  IonGrid,
+  IonRow,
+  IonTextarea,
+  IonRippleEffect,
+} from "@ionic/vue";
 
-import { micOutline } from "ionicons/icons";
+import {
+  micOutline,
+  micCircleOutline,
+  closeCircleOutline,
+} from "ionicons/icons";
 
 export default {
   components: {
@@ -84,12 +166,20 @@ export default {
     IonInput,
     IonCheckbox,
     IonIcon,
+    IonCol,
+    IonGrid,
+    IonRow,
+    IonTextarea,
+    IonRippleEffect,
   },
   data() {
     return {
       micOutline,
+      micCircleOutline,
+      closeCircleOutline,
+      isRecording: false,
       transcribeFromFile: false,
-      textRecord: [],
+      textRecord: ["hello"],
       recognition: null,
       onlive: "",
       languages: [
@@ -142,6 +232,26 @@ export default {
         this.audio.pause();
       }
     },
+    startTouchRecord() {
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      this.recognition = new SpeechRecognition();
+      this.recognition.lang = this.langSelected; // setup language
+      this.recognition.interimResults = true; // if you want to show the results in process
+      this.recognition.maxAlternatives = 1; // get mutliple result
+      this.recognition.continuous = false;
+
+      this.recognition.start();
+      this.isRecording = true;
+    },
+    stopTouchRecord() {
+      this.recognition.onresult = (event) => {
+        event.results[0].isFinal
+          ? this.textRecord.push(` ${event.results[0][0].transcript}.`)
+          : "";
+      };
+      this.isRecording = false;
+    },
     startRecord(fromFile) {
       fromFile ? (this.audio = document.getElementById("audioPlayer")) : "";
 
@@ -155,18 +265,17 @@ export default {
 
       const startTrancribing = () => {
         this.recognition.start();
+        this.isRecording = true;
         fromFile ? this.audio.play() : "";
         this.recognition.onresult = (event) => {
-          this.onlive = event.results[event.results.length - 1][0].transcript;
+          this.onlive = event.results[0][0].transcript;
           /* event.results[event.results.length - 1].isFinal
           ? this.textRecord.push(
               ` ${event.results[event.results.length - 1][0].transcript}.`
             )
           : ""; */
-          if (event.results[event.results.length - 1].isFinal) {
-            this.textRecord.push(
-              ` ${event.results[event.results.length - 1][0].transcript}.`
-            );
+          if (event.results[0].isFinal) {
+            this.textRecord.push(` ${event.results[0][0].transcript}.`);
             if (fromFile) {
               this.recognition.stop();
               this.audio.pause();
@@ -174,6 +283,7 @@ export default {
                 startTrancribing();
               }, 1000);
             }
+            this.isRecording = false;
           }
         };
       };
@@ -183,6 +293,7 @@ export default {
     stopRecord() {
       this.recognition.stop();
       this.transcribeFromFile ? this.audio.pause() : "";
+      this.isRecording = false;
     },
     doThis($event, i) {
       this.textRecord[i] = $event.target.value;
@@ -250,8 +361,57 @@ export default {
     saveLocaly() {
       localStorage.setItem("transcribe", JSON.stringify(this.textRecord));
     },
+    cleanLocal() {
+      localStorage.removeItem("transcribe");
+      this.fromLocalStorage = undefined;
+    },
   },
 };
 </script>
 
-<style lang="scss" scoped></style>
+<style scoped>
+ion-textarea.custom-textarea {
+  --background: #ffffff;
+  --color: rgb(60, 60, 60);
+  --padding-end: 10px;
+  --padding-start: 10px;
+  border: 2px solid rgb(116, 116, 116);
+  border-radius: 5px 5px;
+  position: relative;
+  z-index: 0;
+}
+.delete_icon {
+  position: absolute;
+  top: 40%;
+  right: 20px;
+  font-size: 24px;
+  color: rgb(100, 100, 100);
+  z-index: 1;
+}
+.mic_icon--size {
+  font-size: 64px;
+}
+.ripple-parent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  position: relative;
+  overflow: hidden;
+
+  border: 2px solid rgb(190, 190, 190);
+
+  background-color: #04cece;
+
+  user-select: none;
+  width: 100%;
+}
+.circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+}
+.custom-ripple {
+  color: #05e63d;
+}
+</style>
