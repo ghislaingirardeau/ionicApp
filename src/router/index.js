@@ -1,10 +1,19 @@
 import { createRouter, createWebHistory } from "@ionic/vue-router";
 import MemoriesPage from "../pages/MemoriesPage.vue";
+import homePage from "../pages/homePage.vue";
 
 const routes = [
   {
     path: "/",
-    redirect: "/memories",
+    redirect: "/transcribe",
+  },
+  {
+    path: "/transcribe",
+    component: homePage,
+  },
+  {
+    path: "/transcribe/file",
+    component: () => import("../pages/fileToTextPage.vue"),
   },
   {
     path: "/memories",
@@ -18,10 +27,10 @@ const routes = [
     path: "/memories/add",
     component: () => import("../pages/addMemoryPage.vue"),
   },
-  {
+  /* {
     path: "/memories/transcribe",
     component: () => import("../pages/homePage.vue"),
-  },
+  }, */
 ];
 
 const router = createRouter({

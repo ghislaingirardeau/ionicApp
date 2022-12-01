@@ -1,12 +1,5 @@
 <template>
-  <base-layout pageTitle="Speech to text" :key="reload">
-    <template v-slot:actions-end>
-      <ion-button router-link="/transcribe/file">
-        <slot name="icon-only"
-          ><ion-icon :icon="documentOutline"> </ion-icon
-        ></slot>
-      </ion-button>
-    </template>
+  <base-layout pageTitle="File to text" page-default-back-link="/">
     <ion-grid>
       <ion-row>
         <ion-col
@@ -27,7 +20,12 @@
       </ion-row>
     </ion-grid>
     <ion-grid>
-      <ion-row class="ion-margin-bottom">
+      <ion-row>
+        <ion-col class="ion-text-center">
+          <h1>Voice to text</h1>
+        </ion-col>
+      </ion-row>
+      <ion-row>
         <ion-col class="ion-text-center wrapper-ripple">
           <!-- <ion-button @click="startRecord(transcribeFromFile)"
             ><ion-icon :icon="micOutline"> </ion-icon>
@@ -45,12 +43,15 @@
           </div>
         </ion-col>
       </ion-row>
-      <ion-row>
-        <ion-col>
-          <ion-label>Name Doc : {{ docTitle }}</ion-label>
-          <ion-input placeholder="Your title" v-model="docTitle"></ion-input>
+      <!-- <ion-row>
+        <ion-col class="ion-text-center">
+          <p>
+            <span v-for="(text, i) in textRecord" :key="i">
+              {{ text }}
+            </span>
+          </p>
         </ion-col>
-      </ion-row>
+      </ion-row> -->
       <ion-row
         v-for="(text, i) in textRecord"
         :key="i"
@@ -60,7 +61,7 @@
           <ion-textarea
             :label="'my record ' + i"
             :value="text"
-            @keyup="textRevised($event, i)"
+            @keyup="doThis($event, i)"
             rows="1"
             auto-grow
             class="custom-textarea"
@@ -75,26 +76,65 @@
       </ion-row>
     </ion-grid>
     <div>
-      <ion-button @click="ponctuation">Auto Correct</ion-button>
+      <ion-checkbox v-model="transcribeFromFile"></ion-checkbox>
+      <ion-icon v-if="isRecording" :icon="micCircleOutline"> </ion-icon>
+      <div v-if="transcribeFromFile">
+        <h2>Pick a file and transcribe from it</h2>
+        <div v-if="fileAudioLoad">
+          <figure>
+            <figcaption>Listen to the T-Rex:</figcaption>
+            <audio controls id="audioPlayer">
+              <source :src="fileAudioLoad" type="audio/mpeg" />
+            </audio>
+          </figure>
+          <ion-button @click="playFile(true)">play</ion-button>
+          <ion-button @click="playFile(false)">stop</ion-button>
+        </div>
+        <div>
+          <ion-input
+            label="Pick audio file"
+            type="file"
+            id="audiofileInput"
+            @change="audioFileToRead"
+          ></ion-input>
+        </div>
+      </div>
+
+      <ion-button @click="ponctuation">Add ponctuation</ion-button>
+
+      <ion-button @click="stopRecord">Stop transcribe</ion-button>
     </div>
 
-    <ion-button @click="saveLocaly">save</ion-button>
+    <h2>My text recorded</h2>
+    <p>ON live : {{ onlive }}</p>
+    <div v-if="textRecord.length > 0">
+      <!-- FORMAT AREA WITH MODIFICATION -->
+      <!-- <v-textarea
+        v-for="(text, i) in textRecord"
+        :key="i"
+        :label="'my record ' + i"
+        :value="text"
+        @keyup="doThis($event, i)"
+        rows="1"
+        append-icon="mdi-plus"
+        @click:append="clear(i)"
+        auto-grow
+      ></v-textarea> -->
 
-    <ion-list v-if="fromLocalStorage">
-      <ion-item
-        v-for="file in fromLocalStorage"
-        :key="file.id"
-        @click="loadFile(file)"
-      >
-        {{ file.title }}
-        <ion-icon
-          :icon="closeCircleOutline"
-          @click="cleanLocalStorage(file.id)"
-          class="delete_icon"
-        >
-        </ion-icon>
-      </ion-item>
-    </ion-list>
+      <!-- TEXT FORMAT -->
+      <p>
+        <span v-for="(text, i) in textRecord" :key="i">
+          {{ text }}
+        </span>
+      </p>
+    </div>
+    <ion-button @click="saveLocaly">save</ion-button>
+    <ion-button @click="cleanLocal">clean</ion-button>
+
+    <div v-if="fromLocalStorage">
+      <h2>from local storage</h2>
+      <p>{{ fromLocalStorage }}</p>
+    </div>
   </base-layout>
 </template>
 
@@ -103,48 +143,41 @@ import { Document, Packer, Paragraph } from "docx";
 
 import {
   IonButton,
+  IonInput,
+  IonCheckbox,
   IonIcon,
   IonCol,
   IonGrid,
   IonRow,
   IonTextarea,
   IonRippleEffect,
-  IonLabel,
-  IonInput,
-  IonList,
-  IonItem,
 } from "@ionic/vue";
 
 import {
   micOutline,
   micCircleOutline,
   closeCircleOutline,
-  documentOutline,
 } from "ionicons/icons";
 
 export default {
   components: {
     IonButton,
+    IonInput,
+    IonCheckbox,
     IonIcon,
     IonCol,
     IonGrid,
     IonRow,
     IonTextarea,
     IonRippleEffect,
-    IonLabel,
-    IonInput,
-    IonList,
-    IonItem,
   },
   data() {
     return {
       micOutline,
       micCircleOutline,
       closeCircleOutline,
-      documentOutline,
       isRecording: false,
       transcribeFromFile: false,
-      docTitle: undefined,
       textRecord: ["bonjour ceci est mon premier enregistremm"],
       recognition: null,
       onlive: "",
@@ -164,16 +197,40 @@ export default {
       ],
       langSelected: "en-GB",
       reload: 0,
+      audio: null,
       fileAudioLoad: undefined,
       fromLocalStorage: undefined,
     };
   },
   mounted() {
-    if (localStorage.getItem("Mydocuments")) {
-      this.fromLocalStorage = JSON.parse(localStorage.getItem("Mydocuments"));
+    /* const audio_file = require("@/assets/media/220905_001.mp3");
+    this.audio = new Audio(audio_file); */
+
+    if (localStorage.getItem("transcribe")) {
+      this.fromLocalStorage = JSON.parse(localStorage.getItem("transcribe"));
     }
   },
   methods: {
+    audioFileToRead() {
+      document
+        .querySelector("#audiofileInput")
+        .getInputElement()
+        .then((results) => {
+          console.log(results.files);
+          const loanFiles = [...Object.values(results.files)];
+          const loanFilesURL = URL.createObjectURL(loanFiles[0]);
+          this.fileAudioLoad = loanFilesURL;
+        });
+    },
+    playFile(params) {
+      this.audio = document.getElementById("audioPlayer");
+      /* this.audio.playbackRate = 0.9; */
+      if (params) {
+        this.audio.play();
+      } else {
+        this.audio.pause();
+      }
+    },
     startTouchRecord() {
       const SpeechRecognition =
         window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -194,12 +251,57 @@ export default {
       };
       this.isRecording = false;
     },
-    textRevised($event, i) {
+    startRecord(fromFile) {
+      fromFile ? (this.audio = document.getElementById("audioPlayer")) : "";
+
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      this.recognition = new SpeechRecognition();
+      this.recognition.lang = this.langSelected; // setup language
+      this.recognition.interimResults = true; // if you want to show the results in process
+      this.recognition.maxAlternatives = 1; // get mutliple result
+      this.recognition.continuous = false;
+
+      const startTrancribing = () => {
+        this.recognition.start();
+        this.isRecording = true;
+        fromFile ? this.audio.play() : "";
+        this.recognition.onresult = (event) => {
+          this.onlive = event.results[0][0].transcript;
+          /* event.results[event.results.length - 1].isFinal
+          ? this.textRecord.push(
+              ` ${event.results[event.results.length - 1][0].transcript}.`
+            )
+          : ""; */
+          if (event.results[0].isFinal) {
+            this.textRecord.push(` ${event.results[0][0].transcript}.`);
+            if (fromFile) {
+              this.recognition.stop();
+              this.audio.pause();
+              setTimeout(() => {
+                startTrancribing();
+              }, 1000);
+            }
+            this.isRecording = false;
+          }
+        };
+      };
+
+      startTrancribing();
+    },
+    stopRecord() {
+      this.recognition.stop();
+      this.transcribeFromFile ? this.audio.pause() : "";
+      this.isRecording = false;
+    },
+    doThis($event, i) {
       this.textRecord[i] = $event.target.value;
       console.log(this.textRecord[i]);
+      this.reload++;
     },
     clear(i) {
       this.textRecord.splice(i, 1);
+      this.reload++;
     },
     ponctuation() {
       this.textRecord = this.textRecord.map((elt) => {
@@ -211,6 +313,7 @@ export default {
       this.textRecord = this.textRecord.map((elt) => {
         return elt.replaceAll(" question mark", "?");
       });
+      this.reload++;
       console.log(this.textRecord);
     },
     exportDoc() {
@@ -255,28 +358,11 @@ export default {
       });
     },
     saveLocaly() {
-      let myDocuments = [];
-      if (localStorage.getItem("Mydocuments")) {
-        myDocuments.push(...JSON.parse(localStorage.getItem("Mydocuments")));
-      }
-      myDocuments.push({
-        id: Date.now(),
-        title: this.docTitle === undefined ? "docTest" : this.docTitle,
-        content: this.textRecord,
-      });
-      localStorage.setItem("Mydocuments", JSON.stringify(myDocuments));
-      this.fromLocalStorage = myDocuments;
-      this.reload++;
+      localStorage.setItem("transcribe", JSON.stringify(this.textRecord));
     },
-    cleanLocalStorage(id) {
-      const updateStorage = this.fromLocalStorage.filter((elt) => elt.id != id);
-      localStorage.setItem("Mydocuments", JSON.stringify(updateStorage));
-      this.fromLocalStorage = updateStorage;
-      this.reload++;
-    },
-    loadFile(file) {
-      this.textRecord = file.content;
-      this.docTitle = file.title;
+    cleanLocal() {
+      localStorage.removeItem("transcribe");
+      this.fromLocalStorage = undefined;
     },
   },
 };
@@ -295,8 +381,8 @@ ion-textarea.custom-textarea {
 }
 .delete_icon {
   position: absolute;
-  top: 30%;
-  right: 10px;
+  top: 40%;
+  right: 15px;
   font-size: 24px;
   color: rgb(100, 100, 100);
   z-index: 1;
