@@ -3,6 +3,7 @@
     <ion-grid>
       <ion-row>
         <ion-col
+          size="2"
           class="ion-text-center"
           v-for="lang in languages"
           :key="lang.country"
@@ -13,6 +14,9 @@
             >{{ lang.country }}</ion-button
           ></ion-col
         >
+        <ion-col size="6" class="ion-text-center">
+          <ion-button @click="exportDoc">To Docx</ion-button>
+        </ion-col>
       </ion-row>
     </ion-grid>
     <ion-grid>
@@ -22,7 +26,7 @@
         </ion-col>
       </ion-row>
       <ion-row>
-        <ion-col class="ion-text-center">
+        <ion-col class="ion-text-center wrapper-ripple">
           <!-- <ion-button @click="startRecord(transcribeFromFile)"
             ><ion-icon :icon="micOutline"> </ion-icon>
           </ion-button> -->
@@ -37,11 +41,6 @@
               class="custom-ripple"
             ></ion-ripple-effect>
           </div>
-        </ion-col>
-      </ion-row>
-      <ion-row>
-        <ion-col class="ion-text-center">
-          <p>Live text : {{ onlive }}</p>
         </ion-col>
       </ion-row>
       <!-- <ion-row>
@@ -102,7 +101,7 @@
       </div>
 
       <ion-button @click="ponctuation">Add ponctuation</ion-button>
-      <ion-button @click="exportDoc">export</ion-button>
+
       <ion-button @click="stopRecord">Stop transcribe</ion-button>
     </div>
 
@@ -179,7 +178,7 @@ export default {
       closeCircleOutline,
       isRecording: false,
       transcribeFromFile: false,
-      textRecord: ["hello"],
+      textRecord: ["bonjour ceci est mon premier enregistremm"],
       recognition: null,
       onlive: "",
       languages: [
@@ -373,7 +372,7 @@ export default {
 ion-textarea.custom-textarea {
   --background: #ffffff;
   --color: rgb(60, 60, 60);
-  --padding-end: 10px;
+  --padding-end: 30px;
   --padding-start: 10px;
   border: 2px solid rgb(116, 116, 116);
   border-radius: 5px 5px;
@@ -383,7 +382,7 @@ ion-textarea.custom-textarea {
 .delete_icon {
   position: absolute;
   top: 40%;
-  right: 20px;
+  right: 15px;
   font-size: 24px;
   color: rgb(100, 100, 100);
   z-index: 1;
@@ -391,12 +390,17 @@ ion-textarea.custom-textarea {
 .mic_icon--size {
   font-size: 64px;
 }
+.wrapper-ripple {
+  margin-left: auto;
+}
 .ripple-parent {
   display: flex;
   align-items: center;
   justify-content: center;
 
   position: relative;
+  left: 50%;
+  transform: translateX(-50%);
   overflow: hidden;
 
   border: 2px solid rgb(190, 190, 190);
@@ -404,7 +408,6 @@ ion-textarea.custom-textarea {
   background-color: #04cece;
 
   user-select: none;
-  width: 100%;
 }
 .circle {
   width: 100px;
