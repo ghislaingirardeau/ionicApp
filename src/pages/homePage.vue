@@ -47,8 +47,11 @@
       </ion-row>
       <ion-row>
         <ion-col>
-          <ion-label>Name Doc : {{ docTitle }}</ion-label>
-          <ion-input placeholder="Your title" v-model="docTitle"></ion-input>
+          <ion-label>Name Doc : </ion-label>
+          <ion-input
+            placeholder="Your title"
+            v-model="document.title"
+          ></ion-input>
         </ion-col>
       </ion-row>
       <ion-row
@@ -79,9 +82,10 @@
     </div>
 
     <ion-button @click="saveLocaly">save</ion-button>
+    <ion-button @click="createNewDocument">new</ion-button>
 
     <ion-list v-if="fromLocalStorage">
-      <ion-item
+      <!-- <ion-item
         v-for="file in fromLocalStorage"
         :key="file.id"
         @click="loadFile(file)"
@@ -93,7 +97,22 @@
           class="delete_icon"
         >
         </ion-icon>
-      </ion-item>
+      </ion-item> -->
+      <ion-item-sliding v-for="file in fromLocalStorage" :key="file.id">
+        <ion-item @click="loadFile(file)">
+          <ion-label>{{ file.title }}</ion-label>
+        </ion-item>
+
+        <ion-item-options side="start">
+          <ion-item-option color="danger">
+            <ion-icon
+              slot="icon-only"
+              :icon="closeCircleOutline"
+              @click="cleanLocalStorage(file.id)"
+            ></ion-icon>
+          </ion-item-option>
+        </ion-item-options>
+      </ion-item-sliding>
     </ion-list>
   </base-layout>
 </template>
@@ -113,6 +132,10 @@ import {
   IonInput,
   IonList,
   IonItem,
+  IonItemSliding,
+  IonItemOptions,
+  IonItemOption,
+  toastController,
 } from "@ionic/vue";
 
 import {
@@ -135,6 +158,9 @@ export default {
     IonInput,
     IonList,
     IonItem,
+    IonItemSliding,
+    IonItemOptions,
+    IonItemOption,
   },
   data() {
     return {
@@ -145,9 +171,12 @@ export default {
       isRecording: false,
       transcribeFromFile: false,
       docTitle: undefined,
+      document: {
+        title: undefined,
+        id: undefined,
+      },
       textRecord: ["bonjour ceci est mon premier enregistremm"],
       recognition: null,
-      onlive: "",
       languages: [
         {
           country: "KM",
@@ -164,7 +193,6 @@ export default {
       ],
       langSelected: "en-GB",
       reload: 0,
-      fileAudioLoad: undefined,
       fromLocalStorage: undefined,
     };
   },
@@ -256,27 +284,77 @@ export default {
     },
     saveLocaly() {
       let myDocuments = [];
+      const saveNewDocument = () => {
+        myDocuments.push({
+          id: Date.now(),
+          title:
+            this.document.title === undefined ? "docTest" : this.document.title,
+          content: this.textRecord,
+        });
+      };
       if (localStorage.getItem("Mydocuments")) {
         myDocuments.push(...JSON.parse(localStorage.getItem("Mydocuments")));
+        let indexExist = myDocuments.findIndex(
+          (elt) => elt.id === this.document.id
+        );
+        if (indexExist != -1) {
+          myDocuments.splice(indexExist, 1, {
+            id: this.document.id,
+            title: this.document.title,
+            content: this.textRecord,
+          });
+        } else {
+          saveNewDocument();
+        }
+      } else {
+        saveNewDocument();
       }
-      myDocuments.push({
-        id: Date.now(),
-        title: this.docTitle === undefined ? "docTest" : this.docTitle,
-        content: this.textRecord,
-      });
       localStorage.setItem("Mydocuments", JSON.stringify(myDocuments));
       this.fromLocalStorage = myDocuments;
       this.reload++;
+    },
+    async createNewDocument() {
+      const toast = await toastController.create({
+        message: "Do you want to save your current work ?",
+        buttons: [
+          {
+            text: "Yes",
+            role: "info",
+            handler: () => {
+              this.saveLocaly();
+              this.cleanData();
+            },
+          },
+          {
+            text: "No",
+            role: "cancel",
+            handler: () => {
+              this.cleanData();
+            },
+          },
+        ],
+      });
+
+      await toast.present();
     },
     cleanLocalStorage(id) {
       const updateStorage = this.fromLocalStorage.filter((elt) => elt.id != id);
       localStorage.setItem("Mydocuments", JSON.stringify(updateStorage));
       this.fromLocalStorage = updateStorage;
+      this.cleanData();
+    },
+    cleanData() {
+      this.document = {
+        title: undefined,
+        id: undefined,
+      };
+      this.textRecord = [];
       this.reload++;
     },
     loadFile(file) {
       this.textRecord = file.content;
-      this.docTitle = file.title;
+      this.document.title = file.title;
+      this.document.id = file.id;
     },
   },
 };
