@@ -18,7 +18,7 @@
       </ion-toolbar>
     </ion-header>
     <ion-content>
-      <slot></slot>
+      <slot test="my slot props"></slot>
     </ion-content>
     <ion-footer>
       <ion-toolbar>

@@ -10,6 +10,13 @@ const routes = [
   {
     path: "/transcribe",
     component: homePage,
+    props: (route) => ({ query: route.query.update }),
+  },
+  {
+    path: "/transcribe/:id",
+    name: "editPage",
+    component: () => import("../pages/editPage.vue"),
+    props: (route) => ({ query: route.query.lang }),
   },
   {
     path: "/transcribe/file",
