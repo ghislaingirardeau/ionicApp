@@ -22,7 +22,7 @@
           </ion-button> -->
           <div
             class="ion-activatable ripple-parent circle"
-            @touchstart="startTouchRecord"
+            @touchstart="startTouchRecord($event)"
             @touchend="stopTouchRecord"
           >
             <ion-icon :icon="micOutline" class="mic_icon--size"> </ion-icon>
@@ -135,7 +135,7 @@ export default {
     }
   },
   methods: {
-    startTouchRecord() {
+    startTouchRecord($event) {
       const SpeechRecognition =
         window.SpeechRecognition || window.webkitSpeechRecognition;
       this.recognition = new SpeechRecognition();
@@ -146,13 +146,27 @@ export default {
 
       this.recognition.start();
       this.isRecording = true;
+
+      /* const newspaperSpinning = [
+        { transform: "scale(1)" },
+        { transform: "scale(1.2)" },
+      ];
+
+      const newspaperTiming = {
+        duration: 1000,
+        iterations: 4,
+      };
+      $event.target.animate(newspaperSpinning, newspaperTiming); */
+      console.log($event);
     },
     stopTouchRecord() {
       this.recognition.onresult = (event) => {
+        console.log(event);
         event.results[0].isFinal
           ? this.document.content.push(` ${event.results[0][0].transcript}.`)
           : "";
       };
+
       this.isRecording = false;
     },
     textRevised($event, i) {
@@ -264,20 +278,30 @@ ion-textarea.custom-textarea {
   position: relative;
   left: 50%;
   transform: translateX(-50%);
-  overflow: hidden;
-
-  border: 2px solid rgb(190, 190, 190);
-
   background-color: #04cece;
-
+  border: 2px solid rgb(190, 190, 190);
+  z-index: 0;
   user-select: none;
 }
+
+.circle::after {
+  content: "";
+  opacity: 0;
+  position: absolute;
+  background-color: #04cece;
+  z-index: -1;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  transition: opacity 1s ease-in-out;
+}
+.circle:active::after {
+  opacity: 0.5;
+}
+
 .circle {
   width: 100px;
   height: 100px;
   border-radius: 50%;
-}
-.custom-ripple {
-  color: #05e63d;
 }
 </style>
