@@ -26,7 +26,7 @@ import "./theme/variables.css";
 import "./theme/core.css";
 
 import BaseLayout from "./components/BaseLayout.vue";
-/* import './registerServiceWorker' */
+import "./registerServiceWorker";
 
 const app = createApp(App).use(IonicVue).use(router).use(store);
 
