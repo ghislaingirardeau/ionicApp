@@ -1,7 +1,7 @@
 <template>
   <base-layout pageTitle="Speech to text" :key="reload">
     <template v-slot:actions-end>
-      <ion-button router-link="/transcribe/file">
+      <ion-button router-link="/file">
         <slot name="icon-only"
           ><ion-icon :icon="documentOutline"> </ion-icon
         ></slot>
@@ -30,11 +30,13 @@
       </ion-button>
     </div>
 
+    <ion-button @click="installApp"> install </ion-button>
+
     <ion-list v-if="fromLocalStorage">
       <ion-item-sliding v-for="file in fromLocalStorage" :key="file.id">
         <ion-item
           :router-link="{
-            path: `/transcribe/${file.id}`,
+            path: `/${file.id}`,
             query: { lang: file.lang },
           }"
         >
@@ -97,13 +99,14 @@ export default {
       langSelected: "en-GB",
       reload: 0,
       fromLocalStorage: undefined,
+      deferredPrompt: undefined,
     };
   },
   created() {
     this.$watch(
       () => this.$route.path,
       (to) => {
-        if (to === "/transcribe" && localStorage.getItem("Mydocuments")) {
+        if (to === "/" && localStorage.getItem("Mydocuments")) {
           this.fromLocalStorage = JSON.parse(
             localStorage.getItem("Mydocuments")
           );
@@ -114,8 +117,22 @@ export default {
       this.fromLocalStorage = JSON.parse(localStorage.getItem("Mydocuments"));
     }
   },
-  mounted() {},
+  mounted() {
+    window.addEventListener("beforeinstallprompt", (e) => {
+      this.deferredPrompt = e;
+      console.log(this.deferredPrompt);
+    });
+  },
   methods: {
+    async installApp() {
+      if (this.deferredPrompt !== null) {
+        this.deferredPrompt.prompt();
+        const { outcome } = await this.deferredPrompt.userChoice;
+        if (outcome === "accepted") {
+          this.deferredPrompt = null;
+        }
+      }
+    },
     selectLanguage($event) {
       this.langSelected = $event.target.value;
     },

@@ -9,20 +9,23 @@
         <ion-col size="3" class="ion-text-center">
           <ion-button @click="exportDoc">To Docx</ion-button>
         </ion-col>
-        <ion-col size="3" class="ion-text-center">
+        <ion-col size="3" class="ion-text-center ion-margin-start">
           <ion-button @click="saveLocaly">save</ion-button>
+        </ion-col>
+        <ion-col size="3" class="ion-text-center ion-margin-start">
+          <ion-button @click="useClipboard">Clipboard</ion-button>
         </ion-col>
       </ion-row>
     </ion-grid>
     <ion-grid>
-      <ion-row class="ion-margin-bottom">
+      <ion-row>
         <ion-col class="ion-text-center wrapper-ripple">
           <!-- <ion-button @click="startRecord(transcribeFromFile)"
             ><ion-icon :icon="micOutline"> </ion-icon>
           </ion-button> -->
           <div
             class="ion-activatable ripple-parent circle"
-            @touchstart="startTouchRecord($event)"
+            @touchstart="startTouchRecord()"
             @touchend="stopTouchRecord"
           >
             <ion-icon :icon="micOutline" class="mic_icon--size"> </ion-icon>
@@ -32,14 +35,19 @@
             ></ion-ripple-effect>
           </div>
         </ion-col>
+        <ion-col size="12" v-if="liveResult" class="live_block">
+          <span>{{ liveResult }}</span>
+        </ion-col>
       </ion-row>
-      <ion-row>
+      <ion-row class="ion-margin-bottom">
         <ion-col>
-          <ion-label>Name Doc : </ion-label>
-          <ion-input
-            placeholder="Your title"
-            v-model="document.title"
-          ></ion-input>
+          <ion-item>
+            <ion-label position="floating">Title</ion-label>
+            <ion-input
+              :placeholder="document.title ? document.title : 'File title'"
+              v-model="document.title"
+            ></ion-input>
+          </ion-item>
         </ion-col>
       </ion-row>
       <ion-row
@@ -47,7 +55,7 @@
         :key="i"
         class="ion-align-items-center"
       >
-        <ion-col size="12" class="ion-text-center">
+        <ion-col size="12">
           <ion-textarea
             :label="'my record ' + i"
             :value="text"
@@ -70,6 +78,7 @@
 
 <script>
 import { Document, Packer, Paragraph } from "docx";
+import { Clipboard } from "@capacitor/clipboard";
 
 import {
   IonButton,
@@ -81,14 +90,11 @@ import {
   IonRippleEffect,
   IonLabel,
   IonInput,
+  IonItem,
+  toastController,
 } from "@ionic/vue";
 
-import {
-  micOutline,
-  micCircleOutline,
-  closeCircleOutline,
-  documentOutline,
-} from "ionicons/icons";
+import { micOutline, closeCircleOutline } from "ionicons/icons";
 
 export default {
   components: {
@@ -101,16 +107,14 @@ export default {
     IonRippleEffect,
     IonLabel,
     IonInput,
+    IonItem,
   },
   data() {
     return {
       micOutline,
-      micCircleOutline,
       closeCircleOutline,
-      documentOutline,
-      isRecording: false,
+      liveResult: undefined,
       transcribeFromFile: false,
-      docTitle: undefined,
       document: {
         title: undefined,
         id: undefined,
@@ -135,7 +139,7 @@ export default {
     }
   },
   methods: {
-    startTouchRecord($event) {
+    startTouchRecord() {
       const SpeechRecognition =
         window.SpeechRecognition || window.webkitSpeechRecognition;
       this.recognition = new SpeechRecognition();
@@ -145,29 +149,15 @@ export default {
       this.recognition.continuous = false;
 
       this.recognition.start();
-      this.isRecording = true;
-
-      /* const newspaperSpinning = [
-        { transform: "scale(1)" },
-        { transform: "scale(1.2)" },
-      ];
-
-      const newspaperTiming = {
-        duration: 1000,
-        iterations: 4,
-      };
-      $event.target.animate(newspaperSpinning, newspaperTiming); */
-      console.log($event);
-    },
-    stopTouchRecord() {
       this.recognition.onresult = (event) => {
-        console.log(event);
+        this.liveResult = event.results[0][0].transcript;
         event.results[0].isFinal
-          ? this.document.content.push(` ${event.results[0][0].transcript}.`)
+          ? this.document.content.push(`${event.results[0][0].transcript}.`)
           : "";
       };
-
-      this.isRecording = false;
+    },
+    stopTouchRecord() {
+      this.recognition.stop();
     },
     textRevised($event, i) {
       this.document.content[i] = $event.target.value;
@@ -175,6 +165,13 @@ export default {
     },
     clear(i) {
       this.document.content.splice(i, 1);
+    },
+    async useClipboard() {
+      await Clipboard.write({
+        string: this.document.content.join(" "),
+        label: "Copied",
+      });
+      this.presentToast("Text Copied!");
     },
     exportDoc() {
       const paragraphs = [];
@@ -237,9 +234,16 @@ export default {
       }
       localStorage.setItem("Mydocuments", JSON.stringify(myDocuments));
       this.fromLocalStorage = myDocuments;
-      this.$router.push({
-        path: `/transcribe`,
+      this.presentToast("File saved!");
+    },
+    async presentToast(text) {
+      const toast = await toastController.create({
+        message: text,
+        duration: 1500,
+        position: "top",
       });
+
+      await toast.present();
     },
   },
 };
@@ -255,7 +259,10 @@ ion-textarea.custom-textarea {
   border-radius: 5px 5px;
   position: relative;
   z-index: 0;
+  line-height: 25px;
+  font-weight: bold;
 }
+
 .delete_icon {
   position: absolute;
   top: 30%;
@@ -303,5 +310,8 @@ ion-textarea.custom-textarea {
   width: 100px;
   height: 100px;
   border-radius: 50%;
+}
+.live_block {
+  padding-top: 10px;
 }
 </style>

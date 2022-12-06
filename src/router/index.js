@@ -3,23 +3,23 @@ import MemoriesPage from "../pages/MemoriesPage.vue";
 import homePage from "../pages/homePage.vue";
 
 const routes = [
-  {
+  /* {
     path: "/",
     redirect: "/transcribe",
-  },
+  }, */
   {
-    path: "/transcribe",
+    path: "/",
     component: homePage,
     props: (route) => ({ query: route.query.update }),
   },
   {
-    path: "/transcribe/:id",
+    path: "/:id",
     name: "editPage",
     component: () => import("../pages/editPage.vue"),
     props: (route) => ({ query: route.query.lang }),
   },
   {
-    path: "/transcribe/file",
+    path: "/file",
     component: () => import("../pages/fileToTextPage.vue"),
   },
   {
