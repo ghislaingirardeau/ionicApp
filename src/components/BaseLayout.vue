@@ -24,7 +24,7 @@
     </ion-content>
     <ion-footer>
       <ion-toolbar>
-        <ion-title> Footer </ion-title>
+        <ion-title> GG web dev apps </ion-title>
       </ion-toolbar>
     </ion-footer>
   </ion-page>

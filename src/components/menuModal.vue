@@ -3,11 +3,13 @@
     id="example-modal"
     ref="modal"
     :is-open="isOpen"
-    @didDismiss="cancel"
+    @didDismiss="closeModal"
   >
-    <div class="ion-padding">
-      <h1>Menu</h1>
+    <div>
       <ion-list>
+        <ion-list-header>
+          <ion-label class="menu_title">Settings</ion-label>
+        </ion-list-header>
         <ion-item class="ion-margin-end">
           <ion-label>Record language</ion-label>
           <ion-select
@@ -20,39 +22,33 @@
             <IonSelectOption value="km-KH">Khmer</IonSelectOption>
           </ion-select>
         </ion-item>
+        <ion-item @click="installApp">
+          <ion-icon slot="end" :icon="downloadOutline"> </ion-icon>
+          Download App
+        </ion-item>
+        <ion-item @click="closeModal" class="item_close">
+          <ion-icon slot="end" :icon="closeCircleOutline"> </ion-icon>
+          Close
+        </ion-item>
       </ion-list>
-      <ion-button fill="clear" @click="installApp">
-        <ion-icon slot="start" :icon="downloadOutline"> </ion-icon>
-        Download App
-      </ion-button>
-      <ion-button @click="cancel">Cancel</ion-button>
-      <div>
-        <ul>
-          <li>One</li>
-          <li>Two</li>
-          <li>Three</li>
-        </ul>
-        <button @click="animStar">animStar</button>
-      </div>
     </div>
   </ion-modal>
 </template>
 
 <script>
-import { downloadOutline } from "ionicons/icons";
+import { downloadOutline, closeCircleOutline } from "ionicons/icons";
 import {
   IonModal,
-  IonButton,
   IonIcon,
   IonList,
   IonLabel,
   IonItem,
   IonSelect,
   IonSelectOption,
+  IonListHeader,
 } from "@ionic/vue";
 export default {
   components: {
-    IonButton,
     IonIcon,
     IonModal,
     IonList,
@@ -60,6 +56,7 @@ export default {
     IonItem,
     IonSelect,
     IonSelectOption,
+    IonListHeader,
   },
   props: {
     isOpen: {
@@ -69,6 +66,7 @@ export default {
   data() {
     return {
       downloadOutline,
+      closeCircleOutline,
       deferredPrompt: undefined,
     };
   },
@@ -79,8 +77,8 @@ export default {
   },
   methods: {
     selectLanguage($event) {
-      this.langSelected = $event.target.value;
       this.$store.dispatch("setLang", { lang: $event.target.value });
+      this.closeModal();
       // use the store to for lang
       // select lang inside the modal
     },
@@ -94,63 +92,32 @@ export default {
         }
       }
     },
-    cancel() {
+    closeModal() {
       this.$emit("modal", { message: false });
-    },
-    animStar() {
-      const markers = document.getElementsByTagName("li");
-      console.log(markers);
-
-      for (const marker of markers) {
-        marker.animate(
-          { rotate: ["0deg", "360deg"] },
-          {
-            duration: 2000,
-            pseudoElement: "::before",
-            iterations: Infinity,
-          }
-        );
-        marker.animate(
-          { rotate: ["0deg", "360deg"] },
-          {
-            duration: 2000,
-            pseudoElement: "::after",
-            iterations: Infinity,
-          }
-        );
-      }
     },
   },
 };
 </script>
 
 <style scoped>
+.item_close {
+  color: rgb(216, 114, 11);
+  border-top: 2px solid rgb(216, 114, 11);
+}
+ion-list-header {
+  padding: 0px;
+}
+.menu_title {
+  color: rgb(216, 114, 11);
+  padding-bottom: 10px;
+  padding-left: 20px;
+  border-bottom: 2px solid rgb(216, 114, 11);
+}
 ion-modal#example-modal {
   --width: fit-content;
-  --min-width: 350px;
+  --min-width: 330px;
   --height: fit-content;
   --border-radius: 6px;
   --box-shadow: 0 28px 48px rgba(0, 0, 0, 0.4);
-}
-li::before {
-  content: "✶";
-  display: inline-block;
-  color: red;
-  animation: color-change 2s infinite alternate;
-}
-li::after {
-  content: "✶";
-  display: inline-block;
-  color: red;
-  animation: color-change 2s infinite alternate;
-}
-
-@keyframes color-change {
-  0% {
-    color: red;
-  }
-  100% {
-    color: blue;
-  }
 }
 </style>

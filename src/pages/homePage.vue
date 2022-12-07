@@ -24,7 +24,10 @@
               query: { lang: file.lang },
             }"
           >
-            <ion-label>{{ file.title }}</ion-label>
+            <ion-label>{{ file.title }} </ion-label>
+            <span class="item_date"
+              >On : {{ new Date(file.id).toISOString().slice(0, 10) }}</span
+            >
           </ion-item>
 
           <ion-item-options side="start">
@@ -140,6 +143,11 @@ export default {
 </script>
 
 <style scoped>
+.item_date {
+  font-size: 14px;
+  color: #787878;
+  margin-right: 10px;
+}
 ion-textarea.custom-textarea {
   --background: #ffffff;
   --color: rgb(60, 60, 60);

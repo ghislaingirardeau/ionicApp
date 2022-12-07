@@ -1,5 +1,5 @@
 <template>
-  <base-layout pageTitle="Edit file">
+  <base-layout :pageTitle="'Edit : ' + document.title">
     <template v-slot:actions-end>
       <ion-button slot="end" fill="clear" router-link="/">
         <slot name="icon-only"
@@ -11,14 +11,17 @@
     <template v-slot:contents>
       <ion-grid>
         <ion-row>
+          <ion-col size="3" class="ion-text-center ion-margin-start">
+            <ion-button fill="outline" @click="saveLocaly">save</ion-button>
+          </ion-col>
+
           <ion-col size="3" class="ion-text-center">
-            <ion-button @click="exportDoc">To Docx</ion-button>
+            <ion-button fill="outline" @click="exportDoc">To Docx</ion-button>
           </ion-col>
           <ion-col size="3" class="ion-text-center ion-margin-start">
-            <ion-button @click="saveLocaly">save</ion-button>
-          </ion-col>
-          <ion-col size="3" class="ion-text-center ion-margin-start">
-            <ion-button @click="useClipboard">Clipboard</ion-button>
+            <ion-button fill="outline" @click="useClipboard"
+              >Clipboard</ion-button
+            >
           </ion-col>
         </ion-row>
       </ion-grid>
@@ -145,7 +148,7 @@ export default {
     if (getFile) {
       this.document = getFile;
     } else {
-      this.document.id = this.$route.params.id;
+      this.document.id = parseInt(this.$route.params.id);
     }
   },
   methods: {
