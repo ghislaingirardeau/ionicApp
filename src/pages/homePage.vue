@@ -1,59 +1,44 @@
 <template>
   <base-layout pageTitle="Speech to text" :key="reload">
     <template v-slot:actions-end>
-      <ion-button router-link="/file">
+      <ion-button slot="end" fill="clear" router-link="/file">
         <slot name="icon-only"
           ><ion-icon :icon="documentOutline"> </ion-icon
         ></slot>
       </ion-button>
     </template>
 
-    <ion-list>
-      <ion-item class="ion-margin-end">
-        <ion-label>Record language</ion-label>
-        <ion-select
-          interface="popover"
-          placeholder="English"
-          @ionChange="selectLanguage($event)"
-        >
-          <IonSelectOption value="en-GB">English</IonSelectOption>
-          <IonSelectOption value="fr-FR">French</IonSelectOption>
-          <IonSelectOption value="km-KH">Khmer</IonSelectOption>
-        </ion-select>
-      </ion-item>
-    </ion-list>
+    <template v-slot:contents>
+      <div class="block_newFile">
+        <ion-button fill="clear" @click="createNewDocument"
+          >Create a new file
+          <ion-icon slot="end" :icon="addCircleOutline"></ion-icon>
+        </ion-button>
+      </div>
 
-    <div class="block_newFile">
-      <ion-button fill="clear" @click="createNewDocument"
-        >Create a new file
-        <ion-icon slot="end" :icon="addCircleOutline"></ion-icon>
-      </ion-button>
-    </div>
+      <ion-list v-if="fromLocalStorage">
+        <ion-item-sliding v-for="file in fromLocalStorage" :key="file.id">
+          <ion-item
+            :router-link="{
+              path: `/${file.id}`,
+              query: { lang: file.lang },
+            }"
+          >
+            <ion-label>{{ file.title }}</ion-label>
+          </ion-item>
 
-    <ion-button @click="installApp"> install </ion-button>
-
-    <ion-list v-if="fromLocalStorage">
-      <ion-item-sliding v-for="file in fromLocalStorage" :key="file.id">
-        <ion-item
-          :router-link="{
-            path: `/${file.id}`,
-            query: { lang: file.lang },
-          }"
-        >
-          <ion-label>{{ file.title }}</ion-label>
-        </ion-item>
-
-        <ion-item-options side="start">
-          <ion-item-option color="danger">
-            <ion-icon
-              slot="icon-only"
-              :icon="closeCircleOutline"
-              @click="cleanLocalStorage(file.id)"
-            ></ion-icon>
-          </ion-item-option>
-        </ion-item-options>
-      </ion-item-sliding>
-    </ion-list>
+          <ion-item-options side="start">
+            <ion-item-option color="danger">
+              <ion-icon
+                slot="icon-only"
+                :icon="closeCircleOutline"
+                @click="cleanLocalStorage(file.id)"
+              ></ion-icon>
+            </ion-item-option>
+          </ion-item-options>
+        </ion-item-sliding>
+      </ion-list>
+    </template>
   </base-layout>
 </template>
 
@@ -67,8 +52,6 @@ import {
   IonItemSliding,
   IonItemOptions,
   IonItemOption,
-  IonSelect,
-  IonSelectOption,
   toastController,
 } from "@ionic/vue";
 
@@ -88,18 +71,14 @@ export default {
     IonItemSliding,
     IonItemOptions,
     IonItemOption,
-    IonSelect,
-    IonSelectOption,
   },
   data() {
     return {
       closeCircleOutline,
       documentOutline,
       addCircleOutline,
-      langSelected: "en-GB",
       reload: 0,
       fromLocalStorage: undefined,
-      deferredPrompt: undefined,
     };
   },
   created() {
@@ -117,31 +96,14 @@ export default {
       this.fromLocalStorage = JSON.parse(localStorage.getItem("Mydocuments"));
     }
   },
-  mounted() {
-    window.addEventListener("beforeinstallprompt", (e) => {
-      this.deferredPrompt = e;
-      console.log(this.deferredPrompt);
-    });
-  },
+  mounted() {},
   methods: {
-    async installApp() {
-      if (this.deferredPrompt !== null) {
-        this.deferredPrompt.prompt();
-        const { outcome } = await this.deferredPrompt.userChoice;
-        if (outcome === "accepted") {
-          this.deferredPrompt = null;
-        }
-      }
-    },
-    selectLanguage($event) {
-      this.langSelected = $event.target.value;
-    },
     createNewDocument() {
       this.$router.push({
         /* path: `/transcribe/${Date.now()}`, */
         name: "editPage",
         params: { id: `${Date.now()}` },
-        query: { lang: this.langSelected },
+        query: { lang: this.$store.state.lang },
       });
     },
     async cleanLocalStorage(id) {

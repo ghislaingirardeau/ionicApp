@@ -1,78 +1,84 @@
 <template>
-  <base-layout
-    pageTitle="Speech to text"
-    :key="reload"
-    page-default-back-link="/"
-  >
-    <ion-grid>
-      <ion-row>
-        <ion-col size="3" class="ion-text-center">
-          <ion-button @click="exportDoc">To Docx</ion-button>
-        </ion-col>
-        <ion-col size="3" class="ion-text-center ion-margin-start">
-          <ion-button @click="saveLocaly">save</ion-button>
-        </ion-col>
-        <ion-col size="3" class="ion-text-center ion-margin-start">
-          <ion-button @click="useClipboard">Clipboard</ion-button>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
-    <ion-grid>
-      <ion-row>
-        <ion-col class="ion-text-center wrapper-ripple">
-          <!-- <ion-button @click="startRecord(transcribeFromFile)"
+  <base-layout pageTitle="Edit file">
+    <template v-slot:actions-end>
+      <ion-button slot="end" fill="clear" router-link="/">
+        <slot name="icon-only"
+          ><ion-icon :icon="chevronBackCircleOutline"> </ion-icon
+        ></slot>
+      </ion-button>
+    </template>
+
+    <template v-slot:contents>
+      <ion-grid>
+        <ion-row>
+          <ion-col size="3" class="ion-text-center">
+            <ion-button @click="exportDoc">To Docx</ion-button>
+          </ion-col>
+          <ion-col size="3" class="ion-text-center ion-margin-start">
+            <ion-button @click="saveLocaly">save</ion-button>
+          </ion-col>
+          <ion-col size="3" class="ion-text-center ion-margin-start">
+            <ion-button @click="useClipboard">Clipboard</ion-button>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+      <ion-grid>
+        <ion-row>
+          <ion-col class="ion-text-center wrapper-ripple">
+            <!-- <ion-button @click="startRecord(transcribeFromFile)"
             ><ion-icon :icon="micOutline"> </ion-icon>
           </ion-button> -->
-          <div
-            class="ion-activatable ripple-parent circle"
-            @touchstart="startTouchRecord()"
-            @touchend="stopTouchRecord"
-          >
-            <ion-icon :icon="micOutline" class="mic_icon--size"> </ion-icon>
-            <ion-ripple-effect
-              type="unbounded"
-              class="custom-ripple"
-            ></ion-ripple-effect>
-          </div>
-        </ion-col>
-        <ion-col size="12" v-if="liveResult" class="live_block">
-          <span>{{ liveResult }}</span>
-        </ion-col>
-      </ion-row>
-      <ion-row class="ion-margin-bottom">
-        <ion-col>
-          <ion-item>
-            <ion-label position="floating">Title</ion-label>
-            <ion-input
-              :placeholder="document.title ? document.title : 'File title'"
-              v-model="document.title"
-            ></ion-input>
-          </ion-item>
-        </ion-col>
-      </ion-row>
-      <ion-row
-        v-for="(text, i) in document.content"
-        :key="i"
-        class="ion-align-items-center"
-      >
-        <ion-col size="12">
-          <ion-textarea
-            :label="'my record ' + i"
-            :value="text"
-            @keyup="textRevised($event, i)"
-            rows="1"
-            auto-grow
-            class="custom-textarea"
-          ></ion-textarea>
-          <ion-icon
-            :icon="closeCircleOutline"
-            @click="clear(i)"
-            class="delete_icon"
-          >
-          </ion-icon>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
+            <div
+              class="ion-activatable ripple-parent circle"
+              @touchstart="startTouchRecord()"
+              @touchend="stopTouchRecord"
+            >
+              <ion-icon :icon="micOutline" class="mic_icon--size"> </ion-icon>
+              <ion-ripple-effect
+                type="unbounded"
+                class="custom-ripple"
+              ></ion-ripple-effect>
+            </div>
+          </ion-col>
+          <ion-col size="12" v-if="liveResult" class="live_block">
+            <span>{{ liveResult }}</span>
+          </ion-col>
+        </ion-row>
+        <ion-row class="ion-margin-bottom">
+          <ion-col>
+            <ion-item>
+              <ion-label position="floating">Title</ion-label>
+              <ion-input
+                :placeholder="document.title ? document.title : 'File title'"
+                v-model="document.title"
+              ></ion-input>
+            </ion-item>
+          </ion-col>
+        </ion-row>
+        <ion-row
+          v-for="(text, i) in document.content"
+          :key="i"
+          class="ion-align-items-center"
+        >
+          <ion-col size="12">
+            <ion-textarea
+              :label="'my record ' + i"
+              :value="text"
+              @keyup="textRevised($event, i)"
+              rows="1"
+              auto-grow
+              class="custom-textarea"
+            ></ion-textarea>
+            <ion-icon
+              :icon="closeCircleOutline"
+              @click="clear(i)"
+              class="delete_icon"
+            >
+            </ion-icon>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </template>
   </base-layout>
 </template>
 
@@ -94,7 +100,11 @@ import {
   toastController,
 } from "@ionic/vue";
 
-import { micOutline, closeCircleOutline } from "ionicons/icons";
+import {
+  micOutline,
+  closeCircleOutline,
+  chevronBackCircleOutline,
+} from "ionicons/icons";
 
 export default {
   components: {
@@ -113,6 +123,7 @@ export default {
     return {
       micOutline,
       closeCircleOutline,
+      chevronBackCircleOutline,
       liveResult: undefined,
       transcribeFromFile: false,
       document: {
@@ -122,7 +133,6 @@ export default {
         content: [],
       },
       recognition: null,
-      reload: 0,
       fromLocalStorage: undefined,
     };
   },

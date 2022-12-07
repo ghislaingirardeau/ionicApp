@@ -5,6 +5,7 @@ import { createStore } from "vuex";
 const store = createStore({
   state: {
     datas: null,
+    lang: "en-GB",
   },
   mutations: {
     fetchDatas(state, datas) {
@@ -12,6 +13,10 @@ const store = createStore({
     },
     NEW_CHARACTER(state, data) {
       state.datas.push(data);
+    },
+    SET_LANG(state, data) {
+      state.lang = data.lang;
+      console.log(state.lang);
     },
   },
   actions: {
@@ -38,6 +43,9 @@ const store = createStore({
         context.commit("NEW_CHARACTER", data);
         resolve(true);
       });
+    },
+    setLang(context, data) {
+      context.commit("SET_LANG", data);
     },
   },
 });

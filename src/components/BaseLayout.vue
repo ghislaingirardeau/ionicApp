@@ -1,24 +1,26 @@
 <template>
   <ion-page>
     <!-- always use for a page  -->
+    <menu-modal :isOpen="openModal" @modal="doThis" />
     <ion-header>
       <ion-toolbar>
-        <ion-buttons slot="start">
-          <!-- to position the button inside the toolbar -->
-          <ion-back-button
-            :default-href="pageDefaultBackLink"
-            color="warning"
-          ></ion-back-button>
-        </ion-buttons>
+        <ion-button
+          slot="start"
+          fill="clear"
+          id="open-custom-dialog"
+          @click="openModal = true"
+        >
+          <slot name="icon-only"
+            ><ion-icon :icon="gridOutline"> </ion-icon
+          ></slot>
+        </ion-button>
 
         <ion-title> {{ pageTitle }} </ion-title>
-        <ion-buttons slot="end">
-          <slot name="actions-end"></slot>
-        </ion-buttons>
+        <slot name="actions-end"></slot>
       </ion-toolbar>
     </ion-header>
     <ion-content>
-      <slot test="my slot props"></slot>
+      <slot name="contents"></slot>
     </ion-content>
     <ion-footer>
       <ion-toolbar>
@@ -29,26 +31,29 @@
 </template>
 
 <script>
+import menuModal from "@/components/menuModal";
 import {
   IonPage,
   IonHeader,
   IonToolbar,
   IonTitle,
+  IonButton,
+  IonIcon,
   IonContent,
-  IonBackButton,
-  IonButtons,
   IonFooter,
 } from "@ionic/vue";
+import { gridOutline, chevronBackCircleOutline } from "ionicons/icons";
 export default {
   components: {
     IonPage,
     IonHeader,
     IonToolbar,
     IonTitle,
+    IonButton,
+    IonIcon,
     IonContent,
-    IonBackButton,
-    IonButtons,
     IonFooter,
+    menuModal,
   },
   props: {
     pageTitle: {
@@ -59,7 +64,19 @@ export default {
       type: String,
     },
   },
+  data() {
+    return {
+      gridOutline,
+      chevronBackCircleOutline,
+      openModal: false,
+    };
+  },
+  methods: {
+    doThis() {
+      this.openModal = false;
+    },
+  },
 };
 </script>
 
-<style lang="scss" scoped></style>
+<style scoped></style>
