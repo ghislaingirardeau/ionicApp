@@ -1,7 +1,7 @@
 <template>
   <base-layout :pageTitle="'Edit : ' + document.title">
     <template v-slot:actions-end>
-      <ion-button slot="end" fill="clear" router-link="/">
+      <ion-button fill="clear" router-link="/">
         <slot name="icon-only"
           ><ion-icon :icon="chevronBackCircleOutline"> </ion-icon
         ></slot>

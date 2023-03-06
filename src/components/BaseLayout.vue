@@ -5,7 +5,6 @@
     <ion-header>
       <ion-toolbar>
         <ion-button
-          slot="start"
           fill="clear"
           id="open-custom-dialog"
           @click="openModal = true"
