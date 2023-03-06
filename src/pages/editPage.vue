@@ -190,6 +190,7 @@ export default {
       this.presentToast("Text Copied!");
     },
     exportDoc() {
+      console.log(this.document.content);
       const paragraphs = [];
       for (const key in this.document.content) {
         paragraphs.push(
