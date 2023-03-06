@@ -58,6 +58,9 @@
             </ion-item>
           </ion-col>
         </ion-row>
+        <ion-row>
+          {{ document.content }}
+        </ion-row>
         <ion-row
           v-for="(text, i) in document.content"
           :key="i"
@@ -133,7 +136,7 @@ export default {
         title: undefined,
         id: undefined,
         lang: "en-GB",
-        content: [],
+        content: ["hello world"],
       },
       recognition: null,
       fromLocalStorage: undefined,
@@ -141,7 +144,7 @@ export default {
   },
 
   mounted() {
-    const getFile = JSON.parse(localStorage.getItem("Mydocuments")).find(
+    const getFile = JSON.parse(localStorage.getItem("Mydocuments"))?.find(
       (e) => e.id == this.$route.params.id
     );
     this.document.lang = this.$route.query.lang;
